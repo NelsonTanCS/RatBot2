@@ -4,11 +4,11 @@
 
 import discord
 from discord.ext import commands
+# from discord.ext.commands import Bot
 
 commandPrefix = '!'
-bot = commands.Bot(command_prefix=commandPrefix)
-
-client = discord.Client()
+Client = discord.Client()
+client = commands.Bot(command_prefix=commandPrefix)
 token = open("token.txt", "r").read()
 
 
@@ -25,15 +25,18 @@ async def on_message(message):
         return
 
     if f"{commandPrefix}rat" in message.content.lower():
-        await message.channel.send(":rat: fuckin RAT :rat:")
+        await message.channel.send(":rat: dumb RAT :rat:")
 
     # print(f"{message.channel}: {message.author}: {message.author.name}: {message.content}")
 
 
 @client.event
 async def on_member_join(member):
-    await member.channel.send("imagine being a new RAT")
-    await member.edit(nick="new rat", roles="rats")
+    ratata = client.get_channel(354846043336343554)
+    role = discord.utils.get(member.guild.roles, name="rats")
+    await ratata.send("imagine being a new RAT")
+    await member.edit(nick="new rat")
+    await member.add_roles(role)
 
 
 client.run(token)
