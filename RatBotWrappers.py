@@ -11,9 +11,10 @@ Client = discord.Client()
 client = commands.Bot(command_prefix=commandPrefix)
 token = open("token.txt", "r").read()
 theme = open("theme.txt", "r").read()
+my_guild_id = 354846043336343553
 
 
-# sets the bots rich presence
+# sets the bot's rich presence
 @client.event
 async def on_ready():
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
@@ -25,10 +26,13 @@ async def on_ready():
 # reacts to any message containing the word "rat" with the :rad: custom emoji
 @client.event
 async def on_message(message):
-    guild = client.get_guild(354846043336343553)
+    guild = client.get_guild(my_guild_id)
 
     if message.author == client.user:
         return
+
+    if f"!{theme}" in message.content:
+        await message.channel.send(f":rat: dumb {theme} :rat:")
 
     if theme in message.content.lower():
         emoji = discord.utils.get(guild.emojis, name="rad")
@@ -43,47 +47,20 @@ async def on_message(message):
 # sets member nickname to "new rat", adds "rats" as their role, and sends a messsage
 @client.event
 async def on_member_join(member):
-    channel = client.get_channel(354846043336343554)
-    role = client.get_role(593639732127334410)
+    channel = client.get_channel(354846043336343554) # default channel id
+    role = client.get_role(593639732127334410) # default role id
     await channel.send("imagine being a new " + theme)
     await member.edit(nick="new " + theme)
     await member.add_roles(role)
 
 
 # sets nickname to "rat" if "rat" is not in their nickname
+# bot cannot change nickname of owner
 @client.event
 async def on_member_update(before, after):
-    if theme not in after.nick:
+    guild = client.get_guild(my_guild_id)
+    if before.id != guild.owner_id and theme not in after.nick:
         await after.edit(nick=theme)
-
-
-# ping pong method
-@client.command()
-async def rat(ctx):
-    await ctx.send(f":rat: dumb {theme} :rat:")
-
-
-# creates a group call with all users in the given voice channel
-@client.command()
-async def groupcall(ctx, channel: discord.VoiceChannel, client_user: discord.ClientUser):
-
-    print(channel)
-    members = channel.members
-    user_list = []
-    print("Members")
-    for member in members:
-        user_list.append(client.get_user(member.id))
-        print(member)
-    print("Users")
-    for user in user_list:
-        print(user)
-
-    await client_user.create_group(user_list)
-
-    # guild = client.get_guild(354846043336343553)
-    #
-    # if channel in client.get_all_channels():
-    #     members = guild.get_channel()
 
 
 @client.command()
@@ -107,12 +84,12 @@ async def themechange(ctx, after_theme: str):
     voice_channels = guild.voice_channels
     roles = guild.roles
     for member in members:
-        if member.id != 348315506417336321:
+        if member.id != guild.owner_id:
             nickname = str(member.nick).replace(before_theme, after_theme)
             await member.edit(nick=nickname)
 
     await text_channels[0].edit(name=after_theme)
-    await voice_channels[0].edit(name=after_theme + "bois")
+    await voice_channels[0].edit(name=after_theme + " bois")
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
     for role in roles:
