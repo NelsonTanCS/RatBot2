@@ -10,7 +10,7 @@ commandPrefix = '!'
 Client = discord.Client()
 client = commands.Bot(command_prefix=commandPrefix)
 token = open("token.txt", "r").read()
-theme = "bonobo"
+theme = open("theme.txt", "r").read()
 
 
 # sets the bots rich presence
@@ -19,6 +19,7 @@ async def on_ready():
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
     print(f"we have logged in as {client.user}")
+    print("current theme is " + theme)
 
 
 # reacts to any message containing the word "rat" with the :rad: custom emoji
@@ -28,27 +29,6 @@ async def on_message(message):
 
     if message.author == client.user:
         return
-
-    if "!theme_change" in message.content:
-        parameters = message.content.split()
-        before_theme = parameters[1]
-        after_theme = parameters[2]
-        guild = client.get_guild(354846043336343553)
-        await guild.edit(name=after_theme + " world")
-
-        members = guild.members
-        text_channels = guild.text_channels
-        voice_channels = guild.voice_channels
-        roles = guild.roles
-        for member in members:
-            if member.id != 348315506417336321:
-                nickname = str(member.nick).replace(before_theme, after_theme)
-                await member.edit(nick=nickname)
-
-        await text_channels[0].edit(name=after_theme)
-        await voice_channels[0].edit(name=after_theme + "bois")
-        for role in roles:
-            await role.edit(name=role.name.replace(before_theme, after_theme))
 
     if theme in message.content.lower():
         emoji = discord.utils.get(guild.emojis, name="rad")
@@ -114,22 +94,34 @@ async def add(ctx, left: int, right: int):
 
 # changes the theme including nick names, server name, role names, one text channel, and one voice channel
 @client.command()
-async def themechange(ctx, before_theme: str, after_theme: str):
+async def themechange(ctx, after_theme: str):
+    before_theme = open("theme.txt", "r").read()
+    open("theme.txt", "w").write(after_theme)
+    global theme
+    theme = after_theme
     guild = client.get_guild(354846043336343553)
+    await guild.edit(name=after_theme + " world")
+
     members = guild.members
     text_channels = guild.text_channels
     voice_channels = guild.voice_channels
     roles = guild.roles
     for member in members:
-        nickname = member.nick.replace(before_theme, after_theme)
-        await member.edit(nick=nickname)
+        if member.id != 348315506417336321:
+            nickname = str(member.nick).replace(before_theme, after_theme)
+            await member.edit(nick=nickname)
 
     await text_channels[0].edit(name=after_theme)
     await voice_channels[0].edit(name=after_theme + "bois")
+    activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
+    await client.change_presence(activity=activity)
     for role in roles:
-        await role.edit(name=role.name.replace(before_theme, after_theme))
+        try:
+            await role.edit(name=role.name.replace(before_theme, after_theme))
+        except:
+            print(role)
 
-    await guild.edit(name=after_theme + " world")
+    print("theme changed to " + theme)
 
 
 client.run(token)
