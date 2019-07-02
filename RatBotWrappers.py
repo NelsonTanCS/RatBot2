@@ -12,7 +12,7 @@ client = commands.Bot(command_prefix=commandPrefix)
 token = open("token.txt", "r").read()
 theme = open("theme.txt", "r").read()
 my_guild_id = 354846043336343553
-
+#TODO: Add new themes to all_themes.txt and let "random" be an argument to themechange
 
 # sets the bot's rich presence
 @client.event
@@ -60,7 +60,10 @@ async def on_member_join(member):
 async def on_member_update(before, after):
     guild = client.get_guild(my_guild_id)
     if before.id != guild.owner_id and theme not in after.nick:
-        await after.edit(nick=theme)
+        try:
+            await after.edit(nick=theme)
+        except:
+            print(before)
 
 
 @client.command()
@@ -84,7 +87,7 @@ async def themechange(ctx, after_theme: str):
     voice_channels = guild.voice_channels
     roles = guild.roles
     for member in members:
-        if member.id != guild.owner_id:
+        if member.id != guild.owner_id:  # TODO: find a way to edit owner nickname
             nickname = str(member.nick).replace(before_theme, after_theme)
             await member.edit(nick=nickname)
 
@@ -92,7 +95,7 @@ async def themechange(ctx, after_theme: str):
     await voice_channels[0].edit(name=after_theme + " bois")
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
-    for role in roles:
+    for role in roles:  # TODO: if role is a bot role, skip
         try:
             await role.edit(name=role.name.replace(before_theme, after_theme))
         except:
