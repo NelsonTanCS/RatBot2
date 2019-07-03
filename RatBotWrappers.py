@@ -11,7 +11,7 @@ import atexit
 Client = discord.Client()
 client = commands.Bot(command_prefix="!")
 token = open("token.txt", "r").read()
-theme = open("theme.txt", "r").read()
+theme = open("theme.txt", "r").readline()
 my_guild_id = 354846043336343553
 color = 0x00ff00
 
@@ -86,9 +86,10 @@ async def themechange(ctx, after_theme: str):
         rand_int = random.randint(0, len(themes_list) - 1)
         theme = themes_list[rand_int]
         after_theme = theme
+        themes.close()
     else:
         theme = after_theme
-        open("all_themes.txt", "w").write(after_theme)
+        open("all_themes.txt", "a").write("\n" + after_theme)
 
     open("theme.txt", "w").write(after_theme)
     guild = client.get_guild(354846043336343553)
