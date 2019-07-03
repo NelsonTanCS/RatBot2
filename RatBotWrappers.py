@@ -8,9 +8,8 @@ import random
 import atexit
 # from discord.ext.commands import Bot
 
-commandPrefix = '!'
 Client = discord.Client()
-client = commands.Bot(command_prefix=commandPrefix)
+client = commands.Bot(command_prefix="!")
 token = open("token.txt", "r").read()
 theme = open("theme.txt", "r").read()
 my_guild_id = 354846043336343553
@@ -52,7 +51,7 @@ async def on_message(message):
 async def on_member_join(member):
     channel = client.get_channel(354846043336343554) # default channel id
     role = client.get_guild(my_guild_id).get_role(593639732127334410) # default role id
-    embed = discord.Embed(title=f"Hey {member.name}, imagine being a new {theme.capitalize()}", color=color)
+    embed = discord.Embed(title=f"Hey {member.name}, imagine being a new {theme.upper()}", color=color)
     await channel.send(embed=embed)
     await member.edit(nick="new " + theme)
     await member.add_roles(role)
@@ -110,11 +109,13 @@ async def themechange(ctx, after_theme: str):
     await client.change_presence(activity=activity)
     for role in roles:  # TODO: if role is a bot role, skip
         try:
-            await role.edit(name=role.name.replace(before_theme, after_theme))
+            await role.edit(name=after_theme + "s")
         except:
             print(role)
 
     print("theme changed to " + theme)
     embed = discord.Embed(title=f"Theme changed to {theme}", color=color)
+    channel = client.get_channel(354846043336343554)  # default channel id
+    await channel.send(embed=embed)
 
 client.run(token)
