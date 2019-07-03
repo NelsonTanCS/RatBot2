@@ -4,6 +4,8 @@
 
 import discord
 from discord.ext import commands
+import random
+import atexit
 # from discord.ext.commands import Bot
 
 commandPrefix = '!'
@@ -12,7 +14,7 @@ client = commands.Bot(command_prefix=commandPrefix)
 token = open("token.txt", "r").read()
 theme = open("theme.txt", "r").read()
 my_guild_id = 354846043336343553
-#TODO: Add new themes to all_themes.txt and let "random" be an argument to themechange
+color = 0x00ff00
 
 # sets the bot's rich presence
 @client.event
@@ -32,7 +34,8 @@ async def on_message(message):
         return
 
     if f"!{theme}" in message.content:
-        await message.channel.send(f":rat: dumb {theme} :rat:")
+        embed = discord.Embed(title=f":rat: dumb {theme} :rat:", color=color)
+        await message.channel.send(embed=embed)
 
     if theme in message.content.lower():
         emoji = discord.utils.get(guild.emojis, name="rad")
@@ -48,8 +51,9 @@ async def on_message(message):
 @client.event
 async def on_member_join(member):
     channel = client.get_channel(354846043336343554) # default channel id
-    role = client.get_role(593639732127334410) # default role id
-    await channel.send("imagine being a new " + theme)
+    role = client.get_guild(my_guild_id).get_role(593639732127334410) # default role id
+    embed = discord.Embed(title=f"Hey {member.name}, imagine being a new {theme.capitalize()}", color=color)
+    await channel.send(embed=embed)
     await member.edit(nick="new " + theme)
     await member.add_roles(role)
 
@@ -72,13 +76,22 @@ async def add(ctx, left: int, right: int):
     await ctx.send(left + right)
 
 
-# changes the theme including nick names, server name, role names, one text channel, and one voice channel
+# changes the theme including nicknames, server name, role names, one text channel, and one voice channel
 @client.command()
 async def themechange(ctx, after_theme: str):
     before_theme = open("theme.txt", "r").read()
-    open("theme.txt", "w").write(after_theme)
     global theme
-    theme = after_theme
+    if after_theme == "random":  # TODO: finish this
+        themes = open("all_themes.txt", "r")
+        themes_list = themes.readlines()
+        rand_int = random.randint(0, len(themes_list) - 1)
+        theme = themes_list[rand_int]
+        after_theme = theme
+    else:
+        theme = after_theme
+        open("all_themes.txt", "w").write(after_theme)
+
+    open("theme.txt", "w").write(after_theme)
     guild = client.get_guild(354846043336343553)
     await guild.edit(name=after_theme + " world")
 
@@ -102,6 +115,6 @@ async def themechange(ctx, after_theme: str):
             print(role)
 
     print("theme changed to " + theme)
-
+    embed = discord.Embed(title=f"Theme changed to {theme}", color=color)
 
 client.run(token)
