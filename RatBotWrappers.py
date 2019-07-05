@@ -5,15 +5,23 @@
 import discord
 from discord.ext import commands
 import random
-import atexit
-# from discord.ext.commands import Bot
+import os
+import json
 
-Client = discord.Client()
-client = commands.Bot(command_prefix=">", case_insensitive=True)
-token = open("token.txt", "r").read()
-theme = open("theme.txt", "r").readline()
+# get config file
+current_dir = os.path.dirname(__file__)
+with open(os.path.join(current_dir, 'config.json')) as config_file:
+    config = json.load(config_file)
+
+# define bot
+dev_mode = True
+client = commands.Bot(command_prefix=config['prefix'], case_insensitive=True)
+theme = config['theme']
 my_guild_id = 354846043336343553
-my_channel_id = 354846043336343554  # default channel the bot will send messages to and edit the name of
+if dev_mode:
+    my_channel_id = 594000152025366534  # private bot channel
+else:
+    my_channel_id = 354846043336343554  # default channel the bot will send messages to and edit the name of
 color = 0x00ff00
 
 
@@ -23,7 +31,7 @@ async def on_ready():
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
     embed = discord.Embed(title=f"{theme.capitalize()}s, we back once a-muhfuckin-gain", color=color)
-    await client.get_channel(354846043336343554).send(embed=embed)
+    await client.get_channel(my_channel_id).send(embed=embed)
     print(f"we have logged in as {client.user}")
     print("current theme is " + theme)
 
@@ -32,8 +40,8 @@ async def on_ready():
 @client.event
 async def on_disconnect():
     """ when bot goes offline """
-    embed = discord.Embed(title=f"lata {theme}s")
-    await client.get_channel(354846043336343554).send(embed=embed, color=color)
+    embed = discord.Embed(title=f"lata {theme}s", color=color)
+    await client.get_channel(354846043336343554).send(embed=embed)
 
 
 @client.event
@@ -60,7 +68,7 @@ async def on_message(message):
 
 @client.event
 async def on_member_join(member):
-    """ sets member nickname to "new rat", adds "rats" as their role, and sends a messsage """
+    """ sets member nickname to "new {theme}", adds {theme}s as their role, and sends a message """
     channel = client.get_channel(my_channel_id)
     role = client.get_guild(my_guild_id).get_role(593639732127334410)  # default role id
     embed = discord.Embed(title=f"Hey {member.name}, imagine being a new {theme.upper()}", color=color)
@@ -71,14 +79,14 @@ async def on_member_join(member):
 
 @client.event
 async def on_member_update(before, after):
-    """ sets nickname to {theme} if {theme} is not in their nickname
+    """ sets nickname to {theme} if {theme} is not in their nickname.
         bot cannot change nickname of owner """
     guild = client.get_guild(my_guild_id)
-    if (not before.bot) and theme not in after.nick:  # TODO: find out what "NoneType is not iterable" means
+    if theme not in after.nick:  # TODO: find out what "NoneType is not iterable" means
         try:
             await after.edit(nick=theme)
         except:
-            print(before)
+            print(before + " didn't want to edit nickname")
 
 
 @client.command()
@@ -90,26 +98,32 @@ async def add(ctx, left: int, right: int):
 @client.command(aliases=["changetheme", "ct", "tc"])
 async def themechange(ctx, new_theme: str):
     """changes the theme including nicknames, server name, role names, one text channel, and one voice channel"""
-    before_theme = open("theme.txt", "r").read()
+    channel = client.get_channel(my_channel_id)
+    embed = discord.Embed(title=f"Changing theme to {new_theme}. Don't change theme again until I'm done >:(", color=color)
+    working_message = await channel.send(embed=embed)
+    before_theme = config['theme']
     global theme
-    if new_theme == "random":  # TODO: finish this
-        themes = open("all_themes.txt", "r")
-        themes_list = themes.readlines()
-        rand_int = random.randint(0, len(themes_list) - 1)
-        theme = themes_list[rand_int]
-        themes.close()
+    if new_theme == "random":
+        themes = config['all_themes']
+        rand_int = random.randint(0, len(themes) - 1)
+        theme = themes[rand_int]
     else:
         theme = new_theme
-        open("all_themes.txt", "a").write("\n" + new_theme)
+        config['all_themes'].append(theme)
+        with open('config.json', 'w') as f:
+            json.dump(config, f)
 
-    open("theme.txt", "w").write(theme)
+    config['theme'] = theme
+    with open('config.json', 'w') as f:
+        json.dump(config, f)
+
     guild = client.get_guild(354846043336343553)
     await guild.edit(name=theme + " world")
 
     members = guild.members
     text_channels = guild.text_channels
     voice_channels = guild.voice_channels
-    roles = guild.roles
+
     for member in members:
         if member.id != guild.owner_id:  # TODO: find a way to edit owner nickname
             nickname = str(member.nick).replace(before_theme, theme)
@@ -117,17 +131,16 @@ async def themechange(ctx, new_theme: str):
 
     await text_channels[0].edit(name=theme)
     await voice_channels[0].edit(name=theme + " bois")
+
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
-    for role in roles:  # TODO: if role is a bot role, skip
-        try:
-            await role.edit(name=role.replace(before_theme, theme))
-        except:
-            print(role)
+
+    await guild.get_role(593641477016518695).edit(name=f"not {theme}")  # admin role
+    await guild.get_role(593639732127334410).edit(name=f"{theme}s")  # default role
 
     print("theme changed to " + theme)
+    await working_message.delete()
     embed = discord.Embed(title=f"Theme changed to {theme}", color=color)
-    channel = client.get_channel(my_channel_id)
     await channel.send(embed=embed)
 
 
@@ -135,4 +148,10 @@ async def themechange(ctx, new_theme: str):
 async def nuke(new_theme: str):
     print(f"theme nuke: {new_theme}")
 
-client.run(token)
+
+@client.command()
+async def printtheme(ctx):
+    """Prints the current theme"""
+    await ctx.send(theme)
+
+client.run(config['token'])
