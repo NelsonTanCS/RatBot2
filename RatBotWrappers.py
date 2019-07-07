@@ -14,7 +14,7 @@ with open(os.path.join(current_dir, 'config.json')) as config_file:
     config = json.load(config_file)
 
 # define bot
-dev_mode = True
+dev_mode = True  # sets default text channel to a private one so it doesn't spam the main one
 client = commands.Bot(command_prefix=config['prefix'], case_insensitive=True)
 theme = config['theme']
 my_guild_id = 354846043336343553
@@ -36,23 +36,24 @@ async def on_ready():
     print("current theme is " + theme)
 
 
-
+# TODO: bot doesn't disconnect immediately so this message doesn't send
 @client.event
 async def on_disconnect():
     """ when bot goes offline """
     embed = discord.Embed(title=f"lata {theme}s", color=color)
-    await client.get_channel(354846043336343554).send(embed=embed)
+    await client.get_channel(my_channel_id).send(embed=embed)
 
 
 @client.event
 async def on_message(message):
-    """ reacts to any message containing the word {theme} with the :rad: custom emoji """
+    """ reacts to any message containing the word {theme} with the :rad: custom emoji
+        bot responds when message stars with !{theme}"""
     guild = client.get_guild(my_guild_id)
 
     if message.author == client.user:
         return
 
-    if f"!{theme}" in message.content:
+    if message.content.startswith(f"!{theme}"):
         embed = discord.Embed(title=f":rat: dumb {theme} :rat:", color=color)
         await message.channel.send(embed=embed)
 
@@ -62,8 +63,6 @@ async def on_message(message):
             await message.add_reaction(emoji)
 
     await client.process_commands(message)
-
-    # print(f"{message.channel}: {message.author}: {message.author.name}: {message.content}")
 
 
 @client.event
@@ -82,11 +81,11 @@ async def on_member_update(before, after):
     """ sets nickname to {theme} if {theme} is not in their nickname.
         bot cannot change nickname of owner """
     guild = client.get_guild(my_guild_id)
-    if theme not in after.nick:  # TODO: find out what "NoneType is not iterable" means
+    if before.id != guild.owner.id and theme not in after.nick:
         try:
             await after.edit(nick=theme)
         except:
-            print(before + " didn't want to edit nickname")
+            print(before.name + " didn't want to edit nickname")
 
 
 @client.command()
@@ -125,7 +124,7 @@ async def themechange(ctx, new_theme: str):
     voice_channels = guild.voice_channels
 
     for member in members:
-        if member.id != guild.owner_id:  # TODO: find a way to edit owner nickname
+        if member.id != guild.owner_id:
             nickname = str(member.nick).replace(before_theme, theme)
             await member.edit(nick=nickname)
 
@@ -142,11 +141,6 @@ async def themechange(ctx, new_theme: str):
     await working_message.delete()
     embed = discord.Embed(title=f"Theme changed to {theme}", color=color)
     await channel.send(embed=embed)
-
-
-@client.command()  # TODO: method that adds a theme to a server that has no previous theme
-async def nuke(new_theme: str):
-    print(f"theme nuke: {new_theme}")
 
 
 @client.command()
