@@ -1,0 +1,10 @@
+{
+  "token": "your token",
+  "prefix": "your prefix",
+  "theme": "your theme (leave blank if guild doesn't have a theme set by the bot)",
+  "all_themes": [
+    "random theme 1",
+    "random theme 2",
+    "etc"
+  ]
+}
