@@ -17,17 +17,20 @@ with open(os.path.join(current_dir, 'config.json')) as config_file:
 dev_mode = True  # sets default text channel to a private one so it doesn't spam the main one
 client = commands.Bot(command_prefix=config['prefix'], case_insensitive=True)
 theme = config['theme']
-my_guild_id = 354846043336343553
+my_guild_id = config['guild_id']
+admin_role_id = config['admin_role_id']
+default_role_id = config['default_role_id']
 if dev_mode:
     my_channel_id = 594000152025366534  # private bot channel
 else:
-    my_channel_id = 354846043336343554  # default channel the bot will send messages to and edit the name of
-color = 0x00ff00
+    my_channel_id = config['channel_id']  # default channel the bot will send messages to and edit the name of
+color = 0x00ff00  # color for embedded message border
 
 
 @client.event
 async def on_ready():
     """ sets the bot's rich presence on start """
+    print(my_channel_id)
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
     embed = discord.Embed(title=f"{theme.capitalize()}s, we back once a-muhfuckin-gain", color=color)
@@ -54,7 +57,7 @@ async def on_message(message):
         return
 
     if message.content.startswith(f"!{theme}"):
-        embed = discord.Embed(title=f":rat: dumb {theme} :rat:", color=color)
+        embed = discord.Embed(title=f":rat: rat {theme} :rat:", color=color)
         await message.channel.send(embed=embed)
 
     if theme in message.content.lower():
@@ -69,7 +72,7 @@ async def on_message(message):
 async def on_member_join(member):
     """ sets member nickname to "new {theme}", adds {theme}s as their role, and sends a message """
     channel = client.get_channel(my_channel_id)
-    role = client.get_guild(my_guild_id).get_role(593639732127334410)  # default role id
+    role = client.get_guild(my_guild_id).get_role(default_role_id)  # default role id
     embed = discord.Embed(title=f"Hey {member.name}, imagine being a new {theme.upper()}", color=color)
     await channel.send(embed=embed)
     await member.edit(nick="new " + theme)
@@ -81,7 +84,7 @@ async def on_member_update(before, after):
     """ sets nickname to {theme} if {theme} is not in their nickname.
         bot cannot change nickname of owner """
     guild = client.get_guild(my_guild_id)
-    if before.id != guild.owner.id and theme not in after.nick:
+    if theme not in after.nick:
         try:
             await after.edit(nick=theme)
         except:
@@ -116,7 +119,7 @@ async def themechange(ctx, new_theme: str):
     with open('config.json', 'w') as f:
         json.dump(config, f)
 
-    guild = client.get_guild(354846043336343553)
+    guild = client.get_guild(my_guild_id)
     await guild.edit(name=theme + " world")
 
     members = guild.members
@@ -134,8 +137,8 @@ async def themechange(ctx, new_theme: str):
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
 
-    await guild.get_role(593641477016518695).edit(name=f"not {theme}")  # admin role
-    await guild.get_role(593639732127334410).edit(name=f"{theme}s")  # default role
+    await guild.get_role(admin_role_id).edit(name=f"not {theme}")  # admin role
+    await guild.get_role(default_role_id).edit(name=f"{theme}s")  # default role
 
     print("theme changed to " + theme)
     await working_message.delete()

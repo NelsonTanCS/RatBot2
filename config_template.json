@@ -2,6 +2,10 @@
   "token": "your token",
   "prefix": "your prefix",
   "theme": "your theme (leave blank if guild doesn't have a theme set by the bot)",
+  "guild_id": 111111111111111111,
+  "channel_id": 111111111111111111,
+  "admin_role_id": 111111111111111111,
+  "default_role_id": 111111111111111111,
   "all_themes": [
     "random theme 1",
     "random theme 2",
