@@ -14,7 +14,7 @@ with open(os.path.join(current_dir, 'config.json')) as config_file:
     config = json.load(config_file)
 
 # define bot
-dev_mode = True  # sets default text channel to a private one so it doesn't spam the main one
+dev_mode = False  # sets default text channel to a private one so it doesn't spam the main one
 client = commands.Bot(command_prefix=config['prefix'], case_insensitive=True)
 theme = config['theme']
 my_guild_id = config['guild_id']
@@ -100,9 +100,9 @@ async def add(ctx, left: int, right: int):
 @client.command(aliases=["changetheme", "ct", "tc"])
 async def themechange(ctx, new_theme: str):
     """changes the theme including nicknames, server name, role names, one text channel, and one voice channel"""
-    channel = client.get_channel(my_channel_id)
+    # channel = client.get_channel(my_channel_id)
     embed = discord.Embed(title=f"Changing theme to {new_theme}. Don't change theme again until I'm done >:(", color=color)
-    working_message = await channel.send(embed=embed)
+    working_message = await ctx.send(embed=embed)
     before_theme = config['theme']
     global theme
     if new_theme == "random":
@@ -143,7 +143,7 @@ async def themechange(ctx, new_theme: str):
     print("theme changed to " + theme)
     await working_message.delete()
     embed = discord.Embed(title=f"Theme changed to {theme}", color=color)
-    await channel.send(embed=embed)
+    await ctx.send(embed=embed)
 
 
 @client.command()
