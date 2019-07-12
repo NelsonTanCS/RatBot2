@@ -33,7 +33,7 @@ async def on_ready():
     print(my_channel_id)
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
-    embed = discord.Embed(title=f"{theme.capitalize()}s, we back once a-muhfuckin-gain", color=color)
+    embed = discord.Embed(title=f"{theme.capitalize()}s, we back once a-muhfuggin-gain", color=color)
     await client.get_channel(my_channel_id).send(embed=embed)
     print(f"we have logged in as {client.user}")
     print("current theme is " + theme)
@@ -89,12 +89,6 @@ async def on_member_update(before, after):
             await after.edit(nick=theme)
         except:
             print(before.name + " didn't want to edit nickname")
-
-
-@client.command()
-async def add(ctx, left: int, right: int):
-    """Adds two numbers together."""
-    await ctx.send(left + right)
 
 
 @client.command(aliases=["changetheme", "ct", "tc"])
