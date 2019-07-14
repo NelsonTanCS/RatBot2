@@ -10,6 +10,7 @@ This bot converts an entire Discord server to conform to a single "theme" word.
 
 ## Commands
 * `themechange/changetheme/tc/ct [theme]` Changes the theme. This includes changing the server name, first text channel name, first voice channel name, admin role name, default role name, and all nicknames of users. If there is a previous theme, only replaces the previous theme word from nicknames with the new theme word.
+* `themechange random` Changes the theme to a random theme that has been changed to before.
 * `[theme]` This command changes with the theme. The bot will respond with a message.
 
 ## Features
