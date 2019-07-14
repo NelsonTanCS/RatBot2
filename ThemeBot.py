@@ -84,9 +84,9 @@ async def on_member_update(before, after):
     """ sets nickname to {theme} if {theme} is not in their nickname.
         bot cannot change nickname of owner """
     guild = client.get_guild(my_guild_id)
-    if theme not in after.nick:
+    if theme not in after.nick.lower():
         try:
-            await after.edit(nick=theme)
+            await after.edit(nick=f"{after.nick} {theme}")
         except:
             print(before.name + " didn't want to edit nickname")
 
