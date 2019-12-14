@@ -14,10 +14,11 @@ with open(os.path.join(current_dir, 'config.json')) as config_file:
     config = json.load(config_file)
 
 # define bot
-dev_mode = False  # sets default text channel to a private one so it doesn't spam the main one
+dev_mode = True  # sets default text channel to a private one so it doesn't spam the main one
 client = commands.Bot(command_prefix=config['prefix'], case_insensitive=True)
 theme = config['theme']
 my_guild_id = config['guild_id']
+guild = client.get_guild(my_guild_id)
 admin_role_id = config['admin_role_id']
 default_role_id = config['default_role_id']
 if dev_mode:
@@ -84,12 +85,25 @@ async def on_member_update(before, after):
     """ sets nickname to {theme} if {theme} is not in their nickname.
         bot cannot change nickname of owner """
     guild = client.get_guild(my_guild_id)
-    if theme not in after.nick.lower():
+    if theme not in after.display_name.lower():
         try:
-            await after.edit(nick=f"{after.nick} {theme}")
+            await after.edit(nick=f"{after.display_name} {theme}")
         except:
             print(before.name + " didn't want to edit nickname")
 
+@client.command()
+async def refresh(ctx):
+    guild = client.get_guild(my_guild_id)
+    for member in guild.members:
+        if theme not in member.display_name:
+            try:
+                await member.edit(nick=f"{member.display_name} {theme}")
+            except:
+                print(member.name + " didn't want to edit nickname")
+
+        role = client.get_guild(my_guild_id).get_role(default_role_id)  # default role id
+        if role not in member.roles:
+            await member.add_roles(role)
 
 @client.command(aliases=["changetheme", "ct", "tc"])
 async def themechange(ctx, new_theme: str):
@@ -122,8 +136,11 @@ async def themechange(ctx, new_theme: str):
 
     for member in members:
         if member.id != guild.owner_id:
-            nickname = str(member.nick).replace(before_theme, theme)
-            await member.edit(nick=nickname)
+            if theme not in member.display_name.lower():
+                await member.edit(nick=f"{member.display_name} {theme}")
+            else:
+                nickname = str(member.display_name).replace(before_theme, theme)
+                await member.edit(nick=nickname)
 
     await text_channels[0].edit(name=theme)
     await voice_channels[0].edit(name=theme + " bois")
