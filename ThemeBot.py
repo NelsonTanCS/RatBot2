@@ -7,6 +7,7 @@ from discord.ext import commands
 import random
 import os
 import json
+import random
 
 # get config file
 current_dir = os.path.dirname(__file__)
@@ -31,7 +32,6 @@ color = 0x00ff00  # color for embedded message border
 @client.event
 async def on_ready():
     """ sets the bot's rich presence on start """
-    print(my_channel_id)
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
     embed = discord.Embed(title=f"{theme.capitalize()}s, we back once a-muhfuggin-gain", color=color)
@@ -52,7 +52,7 @@ async def on_disconnect():
 async def on_message(message):
     """ reacts to any message containing the word {theme} with the :rad: custom emoji
         bot responds when message stars with !{theme}"""
-    guild = client.get_guild(my_guild_id)
+    # guild = client.get_guild(my_guild_id)
 
     if message.author == client.user:
         return
@@ -80,20 +80,21 @@ async def on_member_join(member):
     await member.add_roles(role)
 
 
-@client.event
-async def on_member_update(before, after):
-    """ sets nickname to {theme} if {theme} is not in their nickname.
-        bot cannot change nickname of owner """
-    guild = client.get_guild(my_guild_id)
-    if theme not in after.display_name.lower():
-        try:
-            await after.edit(nick=f"{after.display_name} {theme}")
-        except:
-            print(before.name + " didn't want to edit nickname")
+# @client.event
+# async def on_member_update(before, after):
+#     """ sets nickname to {theme} if {theme} is not in their nickname.
+#         bot cannot change nickname of owner """
+#     guild = client.get_guild(my_guild_id)
+#     if theme not in after.display_name.lower():
+#         try:
+#             await after.edit(nick=f"{after.display_name} {theme}")
+#         except:
+#             print(before.name + " didn't want to edit nickname")
+
 
 @client.command()
 async def refresh(ctx):
-    guild = client.get_guild(my_guild_id)
+    # guild = client.get_guild(my_guild_id)
     for member in guild.members:
         if theme not in member.display_name:
             try:
@@ -104,6 +105,21 @@ async def refresh(ctx):
         role = client.get_guild(my_guild_id).get_role(default_role_id)  # default role id
         if role not in member.roles:
             await member.add_roles(role)
+
+
+@client.command()
+async def reset(ctx):
+    # guild = client.get_guild(my_guild_id)
+    for member in guild.members:
+        try:
+            name = str(member)
+            name = name[:name.index("#")]
+            await member.edit(nick=name)
+        except:
+            print(member.name + " didn't change")
+    embed = discord.Embed(title=f"Reset complete", color=color)
+    await ctx.send(embed=embed)
+
 
 @client.command(aliases=["changetheme", "ct", "tc"])
 async def themechange(ctx, new_theme: str):
@@ -127,7 +143,7 @@ async def themechange(ctx, new_theme: str):
     with open('config.json', 'w') as f:
         json.dump(config, f)
 
-    guild = client.get_guild(my_guild_id)
+    # guild = client.get_guild(my_guild_id)
     await guild.edit(name=theme + " world")
 
     members = guild.members
@@ -136,11 +152,11 @@ async def themechange(ctx, new_theme: str):
 
     for member in members:
         if member.id != guild.owner_id:
-            if theme not in member.display_name.lower():
-                await member.edit(nick=f"{member.display_name} {theme}")
-            else:
+            if before_theme.lower() in member.display_name.lower():
                 nickname = str(member.display_name).replace(before_theme, theme)
                 await member.edit(nick=nickname)
+            else:
+                await member.edit(nick=f"{member.display_name} {theme}")
 
     await text_channels[0].edit(name=theme)
     await voice_channels[0].edit(name=theme + " bois")
@@ -160,6 +176,14 @@ async def themechange(ctx, new_theme: str):
 @client.command()
 async def printtheme(ctx):
     """Prints the current theme"""
-    await ctx.send(theme)
+    embed = discord.Embed(title=f"{theme}", color=color)
+    await ctx.send(embed=embed)
+
+@client.command()
+async def cat(ctx):
+    width = 500
+    rand = random.randint(1, 16)
+    link = f"http://placekitten.com/{width}/?image={rand}"
+    await ctx.send(link)
 
 client.run(config['token'])
