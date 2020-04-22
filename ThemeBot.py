@@ -7,7 +7,12 @@ from discord.ext import commands
 import random
 import os
 import json
-import random
+import sys, traceback
+# from bs4 import BeautifulSoup
+# import requests
+# import re
+# import urllib2
+# import cookielib
 
 # get config file
 current_dir = os.path.dirname(__file__)
@@ -52,7 +57,7 @@ async def on_disconnect():
 async def on_message(message):
     """ reacts to any message containing the word {theme} with the :rad: custom emoji
         bot responds when message stars with !{theme}"""
-    # guild = client.get_guild(my_guild_id)
+    guild = client.get_guild(my_guild_id)
 
     if message.author == client.user:
         return
@@ -124,7 +129,7 @@ async def reset(ctx):
 @client.command(aliases=["changetheme", "ct", "tc"])
 async def themechange(ctx, new_theme: str):
     """changes the theme including nicknames, server name, role names, one text channel, and one voice channel"""
-    # channel = client.get_channel(my_channel_id)
+    channel = client.get_channel(my_channel_id)
     embed = discord.Embed(title=f"Changing theme to {new_theme}. Don't change theme again until I'm done >:(", color=color)
     working_message = await ctx.send(embed=embed)
     before_theme = config['theme']
@@ -143,29 +148,36 @@ async def themechange(ctx, new_theme: str):
     with open('config.json', 'w') as f:
         json.dump(config, f)
 
-    # guild = client.get_guild(my_guild_id)
+    guild = client.get_guild(my_guild_id)
     await guild.edit(name=theme + " world")
 
     members = guild.members
     text_channels = guild.text_channels
     voice_channels = guild.voice_channels
-
-    for member in members:
-        if member.id != guild.owner_id:
-            if before_theme.lower() in member.display_name.lower():
-                nickname = str(member.display_name).replace(before_theme, theme)
-                await member.edit(nick=nickname)
-            else:
-                await member.edit(nick=f"{member.display_name} {theme}")
-
+    
     await text_channels[0].edit(name=theme)
     await voice_channels[0].edit(name=theme + " bois")
+
 
     activity = discord.Activity(name=theme + "-related activities", type=discord.ActivityType.watching)
     await client.change_presence(activity=activity)
 
     await guild.get_role(admin_role_id).edit(name=f"not {theme}")  # admin role
     await guild.get_role(default_role_id).edit(name=f"{theme}s")  # default role
+    
+    for member in members:
+        if member.id != guild.owner_id:
+            if before_theme.lower() in member.display_name.lower():
+                nickname = str(member.display_name).replace(before_theme, theme)
+                try:
+                    await member.edit(nick=nickname)
+                except:
+                    traceback.print_exc(file=sys.stdout)
+            else:
+                try:
+                    await member.edit(nick=f"{member.display_name} {theme}")
+                except:
+                    traceback.print_exc(file=sys.stdout)
 
     print("theme changed to " + theme)
     await working_message.delete()
@@ -178,6 +190,7 @@ async def printtheme(ctx):
     """Prints the current theme"""
     embed = discord.Embed(title=f"{theme}", color=color)
     await ctx.send(embed=embed)
+
 
 @client.command()
 async def cat(ctx):
